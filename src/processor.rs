@@ -384,11 +384,14 @@ impl Processor {
         }
 
         // Start dedicated worker routines.
+        // Queue config keys are human-readable names (same as `Processor::new`);
+        // Redis list keys use the `queue:` prefix.
         for (queue, config) in &self.config.queue_configs {
             for i in 0..config.num_workers {
                 join_set.spawn({
                     let mut processor = self.clone();
-                    processor.queues = [queue.clone()].into();
+                    processor.queues = [format!("queue:{queue}")].into();
+                    processor.human_readable_queues = [queue.clone()].into();
                     processor.identity = Some(identity.clone());
                     processor.tid = Some(generate_tid());
                     spawn_worker(
