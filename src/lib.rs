@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use middleware::Chain;
 use rand::{Rng, RngCore};
 use serde::{
-    de::{self, Deserializer, Visitor},
     Deserialize, Serialize, Serializer,
+    de::{self, Deserializer, Visitor},
 };
 use serde_json::Value as JsonValue;
 use sha2::{Digest, Sha256};
@@ -22,7 +22,7 @@ mod stats;
 
 // Re-export
 pub use crate::redis::{
-    with_custom_namespace, RedisConnection, RedisConnectionManager, RedisError, RedisPool,
+    RedisConnection, RedisConnectionManager, RedisError, RedisPool, with_custom_namespace,
 };
 pub use ::redis as redis_rs;
 pub use middleware::{ChainIter, ServerMiddleware};
@@ -567,7 +567,7 @@ impl UnitOfWork {
     #[must_use]
     pub fn from_job(job: Job) -> Self {
         Self {
-            queue: format!("queue:{}", &job.queue),
+            queue: format!("queue:{}", job.queue),
             job,
         }
     }
@@ -592,10 +592,7 @@ impl UnitOfWork {
             // mechanism, I think it's "good enough" to prove this out.
             let args_as_json_string: String = serde_json::to_string(&job.args)?;
             let args_hash = format!("{:x}", Sha256::digest(&args_as_json_string));
-            let redis_key = format!(
-                "sidekiq:unique:{}:{}:{}",
-                &job.queue, &job.class, &args_hash
-            );
+            let redis_key = format!("sidekiq:unique:{}:{}:{}", job.queue, job.class, args_hash);
             let result = redis
                 .set_nx_ex(redis_key, "", duration.as_secs() as usize)
                 .await?;
