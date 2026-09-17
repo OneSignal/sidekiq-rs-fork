@@ -64,6 +64,7 @@ mod test {
         (p, redis)
     }
 
+    #[serial]
     #[tokio::test]
     async fn can_process_an_async_job() {
         #[derive(Clone)]
